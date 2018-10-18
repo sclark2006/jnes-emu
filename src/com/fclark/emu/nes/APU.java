@@ -16,6 +16,8 @@ public class APU implements ProcessingUnit {
 	private static final int CHANNEL_SIZE_IN_BYTES = 4;
 	
 	private Map<AudioChannel,ByteBuffer> channelsMap;
+	private Register SND_CHN = Register.ofOneByte();
+	
 	long tickCounter = 0;
 	
 	public APU() {
@@ -45,6 +47,8 @@ public class APU implements ProcessingUnit {
 			AddressMapper.map(mappedAddress, this.channelsMap.get(channel));
 			mappedAddress+= CHANNEL_SIZE_IN_BYTES;
 		}
+		AddressMapper.map(0x4015, SND_CHN);
+		
 	}
 
 	@Override

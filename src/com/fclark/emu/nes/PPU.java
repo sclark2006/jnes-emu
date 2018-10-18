@@ -25,7 +25,7 @@ public class PPU implements ProcessingUnit {
 	private int tickCounter;
 	private Register[] registers = new Register[PPURegisters.values().length];
 
-	private Register OAMDMA = Register.ofOneByte();
+	
 
 	/**
 	 * This could be also implementes like this:
@@ -61,8 +61,7 @@ public class PPU implements ProcessingUnit {
 			for(int regIndex = 0; regIndex < registers.length; regIndex++) {
 				AddressMapper.map(mappedAddress++, registers[regIndex]);
 			}
-		}
-		AddressMapper.map(0x4014, this.OAMDMA);
+		}		
 		
 	}
 
