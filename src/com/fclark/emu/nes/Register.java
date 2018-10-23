@@ -1,43 +1,70 @@
 package com.fclark.emu.nes;
 
-public class Register {
-	private int value;
-	private int bitSize;
-	
-	private Register(int bitSize){
-		this.bitSize = bitSize;
-	}
-	
-	public void set(int value) {
-		//TODO: Validate according size;
-		this.value = value;
-	}
-	
-	public int get() {
-		return value;
-	}
-	
-	public void setBit(int bit) {
-		this.value |= 1 << bit;
-	}
-	
-	public void clearBit(int bit) {
-		this.value &= ~(1 << bit);
-	}
-	
-	public int  increment() {
-		return ++value;
-	}
-	
-	public int decrement() {
-		return --value;
-	}
+import java.util.BitSet;
 
-	public int getBitSize() {
-		return bitSize;
+public class Register extends BitSet {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private final int maxValue;
+	private Register(int nbits){
+		super(nbits);
+		maxValue = (int) Math.pow(2, nbits);
 	}
 	
-	public static Register ofOneByte() {
+	
+	private void increment(boolean positive) {
+		for(int bit = this.length() - 1; bit >= 0; bit--) {
+			boolean bitValue = this.get(bit);
+			this.set(bit, !bitValue);
+			if(positive ^ bitValue) break;
+		}			
+	}
+	public int read() {
+		int result = 0;
+
+		byte[] bits = this.toByteArray();
+		for(byte bit = 0; bit < bits.length; bit++) {			
+			result = (bits[bit] | result << 1);
+		}
+		return result;
+	}
+	
+	public void write(int value) {
+		if(value > maxValue)
+			throw new IndexOutOfBoundsException(value);
+		
+		char[] charBits = Integer.toBinaryString(value).toCharArray();
+		for(byte bit = 0; bit < this.length(); bit++) {
+			this.set(bit, charBits[bit] == '1');
+		} 	
+	}
+	
+	
+	public int incrementAfter() {
+		int result = read();
+		increment(true);
+		return result;
+ 	}
+	
+	public int incrementBefore() {
+		increment(true);
+		return read();
+ 	}
+	
+	public int decrementAfter() {
+		int result = read();
+		increment(false);
+		return result;
+ 	}
+	
+	public int decrementBefore() {
+		increment(false);
+		return read();
+ 	}
+	
+	public static Register of8Bits() {
 		return new Register(8);
 	}
 	

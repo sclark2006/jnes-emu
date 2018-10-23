@@ -16,11 +16,13 @@ public class APU implements ProcessingUnit {
 	private static final int CHANNEL_SIZE_IN_BYTES = 4;
 	
 	private Map<AudioChannel,ByteBuffer> channelsMap;
-	private Register SND_CHN = Register.ofOneByte();
+	private Register SND_CHN = Register.of8Bits();
 	
 	long tickCounter = 0;
+	private AddressDecoder addressMapper;
 	
-	public APU() {
+	public APU(AddressDecoder addressMapper) {
+		this.addressMapper = addressMapper;
 		for(AudioChannel channel: AudioChannel.values()) {
 			channelsMap.put(channel, ByteBuffer.allocateDirect(CHANNEL_SIZE_IN_BYTES));
 		}
@@ -40,15 +42,14 @@ public class APU implements ProcessingUnit {
 	}
 
 	@Override
-	public void onInit() {
+	public void onPowerUp() {
 		System.out.print("Init the APU");
 		int mappedAddress = INITIAL_MEMORY_ADDRESS;
 		for(AudioChannel channel: AudioChannel.values()) {
-			AddressMapper.map(mappedAddress, this.channelsMap.get(channel));
+			addressMapper.map(mappedAddress, this.channelsMap.get(channel));
 			mappedAddress+= CHANNEL_SIZE_IN_BYTES;
 		}
-		AddressMapper.map(0x4015, SND_CHN);
-		
+		addressMapper.map(0x4015, SND_CHN);
 	}
 
 	@Override

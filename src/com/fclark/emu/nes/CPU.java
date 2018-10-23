@@ -1,47 +1,54 @@
 package com.fclark.emu.nes;
 
-import java.nio.ByteBuffer;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.function.Consumer;
 
 import com.fclark.emu.ProcessingUnit;
-import com.fclark.emu.nes.io.Memory;
 
 /*6502 - Ricoh 2A03*/
 public class CPU implements ProcessingUnit {
 	private static final int FREQUENCY_DIVIDER = 12;
-	private static final int RAM_START_ADDRESS = 0x0000;
-	private static final int SRAM_START_ADDRESS = 0x6000;
-	private static final int MIRROR_SIZE_BYTES = 4;
-	private Register A = Register.ofOneByte(), 
-			X = Register.ofOneByte(), Y = Register.ofOneByte(),
+	private static Map<Integer, Consumer<CPU>> INSTRUCTIONS_MAP;	
+	private final AddressDecoder addressDecoder;
+	
+	private Register A = Register.of8Bits(), 
+			X = Register.of8Bits(), Y = Register.of8Bits(),
 			PC = Register.of(16),
-			S = Register.ofOneByte(),
-			P = Register.ofOneByte();
+			S = Register.of8Bits(),
+			P = Register.of8Bits(); //Status
+	 
+
+	int cycleCounter = 0;	
 	
-	private ByteBuffer RAM = ByteBuffer.allocateDirect(2048);
-	private ByteBuffer SRAM = ByteBuffer.allocateDirect(8192);
-	private Register OAMDMA = Register.ofOneByte();
-	private Register JOY1 = Register.ofOneByte();
-	private Register JOY2 = Register.ofOneByte();
-	
-	
-	int cycleCounter = 0;
-	private int[] instructions = {};
-	
-	
-	public CPU() {
-		mapMemory();
+	public CPU(AddressDecoder addressMapper) {
+		this.addressDecoder = addressMapper;
 	}
 	
 	@Override
-	public void onInit() {
+	public void onPowerUp() {
 		System.out.println("Init the CPU");
-		P.set(0x30);
-		A.set(0x0);
-		X.set(0x0);
-		Y.set(0x0);
-		S.set(0xFD);	
+		P.write(0x34);
+		A.write(0x0);
+		X.write(0x0);
+		Y.write(0x0);
+		S.write(0xFD);
+		this.addressDecoder.writeAt(0x4017, 0x0); //frame irq enabled
+		this.addressDecoder.writeAt(0x4015, 0x0); //all channels disabled
+		this.addressDecoder.writeRange(0x4000, 0x400F, 0);
+		this.addressDecoder.writeRange(0, 0x07FF, 0); 
 	}
 	
+
+	@Override
+	public void onReset() {
+		System.out.println("CPU Reset");
+		S.write(S.read() - 3);
+		P.set(StatusFlag.INTERRUPT_DISABLE.getBit()); // P.or(new BitSet(0x4));
+		this.addressDecoder.writeAt(0x4015, 0x0); //all channels disabled
+	}
+
+
 	@Override
 	public void onClockCycle() {
 		cycleCounter = ++cycleCounter % FREQUENCY_DIVIDER;
@@ -53,34 +60,35 @@ public class CPU implements ProcessingUnit {
 	@Override
 	public void process() {
 		System.out.print("\n ->cpu cycle\n");
-		byte opcode = readMemoryAt(PC.increment());
-		//decodeAndExecute(instructionsTable.get(opcode));
+		//TODO: check interrupt
+		//TODO: Detect addressing mode
+		int instruction = this.addressDecoder.readAt(PC.read());
+		
+		INSTRUCTIONS_MAP.get(instruction).accept(this);
+		
+		PC.incrementBefore();
 	}
 	
-	private void mapMemory() {
-		int mirrorAddress = RAM_START_ADDRESS;
-		int ramSize = RAM.array().length;
-		for(int mirror = 0; mirror < MIRROR_SIZE_BYTES; mirror++) {
-			AddressMapper.map(mirrorAddress, RAM); 
-			mirrorAddress += ramSize;
+
+
+	public static enum StatusFlag {
+		CARRY(0), ZERO(1), INTERRUPT_DISABLE(2), DECIMAL_MODE(3),
+		BREAK(4), UNUSED(5), OVERFLOW(6), SIGN(7);
+		
+		private final int bit;
+
+		private StatusFlag(int bit) {
+			this.bit = bit;
 		}
-		AddressMapper.map(SRAM_START_ADDRESS, SRAM);
-		AddressMapper.map(0x4014, this.OAMDMA);
-		AddressMapper.map(0x4016, this.JOY1);
-		AddressMapper.map(0x4017, this.JOY2);
+		
+		public int getBit() {
+			return bit;
+		}
 		
 	}
-
-	private byte readMemoryAt(int address) {
-		//AddressMapper.readAt(address)
-		return 0;
+	
+	static {
+		INSTRUCTIONS_MAP = new Hashtable<>();
+		INSTRUCTIONS_MAP.put(0x0,(cpu) -> {});
 	}
-
-	@Override
-	public void onReset() {
-		// TODO Auto-generated method stub
-		
-	}
-
-
 }

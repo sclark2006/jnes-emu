@@ -1,10 +1,6 @@
 package com.fclark.emu.nes;
 
-import java.nio.ByteBuffer;
-import java.util.Map;
-
 import com.fclark.emu.ProcessingUnit;
-import com.fclark.emu.nes.APU.AudioChannel;
 
 /**
  * Emulator for Ricoh 2C02	
@@ -24,6 +20,7 @@ public class PPU implements ProcessingUnit {
 
 	private int tickCounter;
 	private Register[] registers = new Register[PPURegisters.values().length];
+	private AddressDecoder addressMapper;
 
 	
 
@@ -32,11 +29,13 @@ public class PPU implements ProcessingUnit {
 	 * Register[] registers = new Register[8]; or
 	 * ByteBuffer registers = ByteBuffer.allocateDirect(8); or
 	 * Map<PPURegister,Registers> registerMap
+	 * @param addressMapper 
 	 */
 
-	public PPU() {
+	public PPU(AddressDecoder addressMapper) {
+		this.addressMapper = addressMapper;
 		for(int regIndex = 0; regIndex < 8; regIndex++) {
-			registers[regIndex] = Register.ofOneByte();
+			registers[regIndex] = Register.of8Bits();
 		}
 	}
 
@@ -55,11 +54,11 @@ public class PPU implements ProcessingUnit {
 	}
 
 	@Override
-	public void onInit() {
+	public void onPowerUp() {
 		int mappedAddress = INITIAL_MEMORY_ADDRESS;
 		for(int mirror = 0; mirror < MIRROR_SIZE_BYTES; mirror++) {
 			for(int regIndex = 0; regIndex < registers.length; regIndex++) {
-				AddressMapper.map(mappedAddress++, registers[regIndex]);
+				addressMapper.map(mappedAddress++, registers[regIndex]);
 			}
 		}		
 		
