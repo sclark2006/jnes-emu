@@ -1,7 +1,6 @@
 package com.fclark.emu.devices;
 
 import java.nio.ByteBuffer;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -29,9 +28,11 @@ public class NESConsole implements ConsoleDevice {
 	
 	private ExecutorService executorService = Executors.newSingleThreadExecutor();
 	private boolean powerOn = false;
-	private DisplayDevice display;
 	private Clock clock;
 	private AddressDecoder addressDecoder = new AddressDecoder();
+	private CPU cpu;
+	private PPU ppu;
+	private APU apu;
 	private byte[] RAM = new byte[_2KB];
 	private byte[] SRAM = new byte[_8KB];
 
@@ -52,10 +53,11 @@ public class NESConsole implements ConsoleDevice {
 	@Override
 	public void powerOn() {
 		mapMemory();
+		cpu = new CPU(addressDecoder);
+		ppu = new PPU(addressDecoder);
+		apu = new APU(addressDecoder);
 		clock = Clock.of(CLOCK_MASTER_FREQUENCY_HZ);
-		clock.subscribe(new CPU(addressDecoder));
-		clock.subscribe(new PPU(addressDecoder));
-		clock.subscribe(new APU(addressDecoder));
+		clock.subscribe(cpu).subscribe(ppu).subscribe(apu);
 		executorService.execute(clock);
 		powerOn = true;
 		waitForPowerOff();
@@ -97,7 +99,9 @@ public class NESConsole implements ConsoleDevice {
 
 	@Override
 	public void castToDisplay(DisplayDevice display) {
-		this.display = display;
+		if(display != null) {
+			display.setVideoSource(ppu.getVideoOutputStream() );
+		}
 	}
 
 	@Override

@@ -44,8 +44,9 @@ public class Clock implements Runnable  {
 
 	}
 
-	public void subscribe(ClockCyclesSubscriber subscriber) {
+	public Clock subscribe(ClockCyclesSubscriber subscriber) {
 		processorsList.add(subscriber);	
+		return this;
 	}
 	
 	public static Clock of(long frequencyInHertzs) {

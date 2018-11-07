@@ -1,5 +1,7 @@
 package com.fclark.emu.nes;
 
+import java.io.PipedOutputStream;
+
 import com.fclark.emu.ProcessingUnit;
 
 /**
@@ -21,6 +23,7 @@ public class PPU implements ProcessingUnit {
 	private int tickCounter;
 	private Register[] registers = new Register[PPURegisters.values().length];
 	private AddressDecoder addressMapper;
+	private PipedOutputStream videoOutputStream;
 
 	
 
@@ -37,6 +40,7 @@ public class PPU implements ProcessingUnit {
 		for(int regIndex = 0; regIndex < 8; regIndex++) {
 			registers[regIndex] = Register.of8Bits();
 		}
+		videoOutputStream = new PipedOutputStream();
 	}
 
 	@Override
@@ -68,6 +72,10 @@ public class PPU implements ProcessingUnit {
 	public void onReset() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	public PipedOutputStream getVideoOutputStream() {
+		return this.videoOutputStream;
 	}
 
 }
