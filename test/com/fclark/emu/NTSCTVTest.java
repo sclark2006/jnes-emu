@@ -1,10 +1,9 @@
 package com.fclark.emu;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+import com.fclark.emu.devices.NTSCDevice;
 import org.junit.jupiter.api.Test;
 
-import com.fclark.emu.devices.NTSCDevice;
+import static org.junit.jupiter.api.Assertions.*;
 
 class NTSCTVTest {
 
