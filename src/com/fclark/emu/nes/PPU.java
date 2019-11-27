@@ -38,7 +38,7 @@ public class PPU implements ProcessingUnit {
 	public PPU(AddressDecoder addressMapper) {
 		this.addressMapper = addressMapper;
 		for(int regIndex = 0; regIndex < 8; regIndex++) {
-			registers[regIndex] = Register.of8Bits();
+			registers[regIndex] = new Register(8);
 		}
 		videoOutputStream = new PipedOutputStream();
 	}

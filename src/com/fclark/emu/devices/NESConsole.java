@@ -18,37 +18,18 @@ import com.fclark.emu.nes.io.Cartridge;
 
 public class NESConsole implements ConsoleDevice {
 	public static long CLOCK_MASTER_FREQUENCY_HZ = 21441960;
+	private static final int MIRROR_SIZE_BYTES = 4, MEM_SIZE_2KB = 2048, MEM_SIZE_8KB = 8192;
 	
+	ExecutorService executorService = Executors.newSingleThreadExecutor();
+	boolean powerOn = false;
+	Clock clock; CPU cpu; PPU ppu; APU apu; AddressDecoder addressDecoder;
+	byte[] RAM = new byte[MEM_SIZE_2KB], SRAM = new byte[MEM_SIZE_8KB];
+	Register OAMDMA = new Register(8), JOY1 = new Register(8), JOY2 = new Register(8);
 
-	private static final int MIRROR_SIZE_BYTES = 4;
-
-	private static final int _2KB = 2048;
-	private static final int _8KB = 8192;
-	
-	
-	private ExecutorService executorService = Executors.newSingleThreadExecutor();
-	private boolean powerOn = false;
-	private Clock clock;
-	private AddressDecoder addressDecoder = new AddressDecoder();
-	private CPU cpu;
-	private PPU ppu;
-	private APU apu;
-	private byte[] RAM = new byte[_2KB];
-	private byte[] SRAM = new byte[_8KB];
-
-	private Register OAMDMA = Register.of8Bits(),
-			JOY1 = Register.of8Bits(),
-			JOY2 = Register.of8Bits();
-	
-	
-	public NESConsole() {
-		this.addressDecoder  = new AddressDecoder();
-	}
+	public NESConsole() { this.addressDecoder  = new AddressDecoder(); }
 	
 	@Override
-	public boolean isPowerOn() {
-		return powerOn;
-	}
+	public boolean isPowerOn() { return powerOn; }
 	
 	@Override
 	public void powerOn() {
@@ -63,9 +44,7 @@ public class NESConsole implements ConsoleDevice {
 		waitForPowerOff();
 	}
 	
-	public void powerOff() {
-		powerOn = false;
-	}
+	public void powerOff() { powerOn = false;}
 	
 	private void mapMemory() {
 		//Map RAM

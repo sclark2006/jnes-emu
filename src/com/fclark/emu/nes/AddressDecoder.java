@@ -33,7 +33,7 @@ public class AddressDecoder {
 	
 	public Register map(int startAddress, Register register) {
 		this.addressSet.add(new AddressRange<Register>(startAddress, 
-				startAddress + (int)(Math.ceil(register.length() / 8) - 1), 
+				startAddress + (int)(Math.ceil(register.size() / 8) - 1),
 				register));
 		return register;
 	}

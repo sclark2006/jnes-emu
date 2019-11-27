@@ -16,7 +16,7 @@ public class APU implements ProcessingUnit {
 	private static final int CHANNEL_SIZE_IN_BYTES = 4;
 	
 	private Map<AudioChannel,ByteBuffer> channelsMap;
-	private Register SND_CHN = Register.of8Bits();
+	private Register SND_CHN = new Register(8);
 	
 	long tickCounter = 0;
 	private AddressDecoder addressMapper;

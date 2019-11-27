@@ -1,6 +1,7 @@
-package com.fclark.emu.nes;
+package com.fclark.emu;
 
-import java.util.BitSet;
+import com.fclark.emu.nes.Bit;
+import com.fclark.emu.nes.Register;
 
 public class JNesEmu {
 
@@ -108,21 +109,19 @@ public class JNesEmu {
         // CPU registers:
         int PC=0xC000;
         int A=0,X=0,Y=0,S=0;
+        /* Status flags: */
+        Register P = new Register(8) {
+            @Bit(0) byte C; // carry
+            @Bit(1) byte Z; // zero
+            @Bit(2) byte I; // interrupt enable/disable
+            @Bit(3) byte D; // decimal mode (unsupported on NES, but flag exists)
+            // 4,5 (0x10,0x20) don't exist
+            @Bit(6) byte V; // overflow
+            @Bit(7) byte N; // negative
+        };
 
-//        union /* Status flags: */
-//        {
-//            u8 raw;
-//            RegBit<0> C; // carry
-//            RegBit<1> Z; // zero
-//            RegBit<2> I; // interrupt enable/disable
-//            RegBit<3> D; // decimal mode (unsupported on NES, but flag exists)
-//            // 4,5 (0x10,0x20) don't exist
-//            RegBit<6> V; // overflow
-//            RegBit<7> N; // negative
-//        } P;
-
-        int wrap(int oldaddr, int newaddr)  { return (oldaddr & 0xFF00) + newaddr; }
-        void Misfire(int old, int addr) { int q = wrap(old, addr); if(q != addr) RB(q); }
+        int wrap(int oldaddr, int newaddr)  { return ((oldaddr & 0xFF00) + newaddr); }
+        void Misfire(short old, short addr) { int q = wrap(old, addr); if(q != addr) RB(q); }
         int   Pop()        { return RB(0x100 | ++S); }
         void Push(int v)   { WB(0x100 | S--, v); }
 

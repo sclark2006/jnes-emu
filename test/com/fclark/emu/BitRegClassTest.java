@@ -1,66 +1,78 @@
 package com.fclark.emu;
 
 import org.junit.jupiter.api.Test;
-
-import java.util.Arrays;
-import java.util.BitSet;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.lang.reflect.ParameterizedType;
+import java.util.BitSet;
 
 public class BitRegClassTest {
 
-    public static class RegBit {
+    public static class RegBitG<T extends Number> {
+        BitSet bitSet;
+        int bitNo, nBits;
+        int maxValue;
+        long value;
+        Class<T> classType;
 
-        public RegBit(int bitPos) {
+        protected void init(int bitNo, int nBits) {
+            this.bitNo = bitNo;
+            this.nBits = nBits;
+            this.bitSet = new BitSet(nBits);
+            this.maxValue = (int) Math.pow(2, nBits );
+            classType = (Class<T>) this.getClass().getGenericSuperclass().getClass();
+        }
+
+        public static <T extends Number> RegBitG<T> of(int bitNo) {
+            return of(bitNo,1);
+        }
+        public static <T extends Number> RegBitG<T> of(int bitNo, int nBits) {
+            RegBitG<T> result = new RegBitG<>();
+            result.init(bitNo, nBits);
+            return result;
+        }
+
+        public void set(T value) {
+            if(value.intValue() > maxValue)
+                throw new IllegalArgumentException("The specified value should not be greater than : "+ maxValue);
+
+            char[] charBits = Long.toBinaryString(value.longValue()).toCharArray();
+            for(byte bit = 0; bit < this.bitSet.size(); bit++) {
+                this.bitSet.set(bit, charBits[bit] == '1');
+            }
+        }
+
+        public T get() {
+            long result = 0;
+
+            byte[] bits = this.bitSet.toByteArray();
+            for(byte bit = 0; bit < bits.length; bit++) {
+                result = (bits[bit] | result << 1);
+            }
+            //classType.getMethod("valueOf").
+            return (T) Byte.valueOf((byte) result);
         }
     }
 
-//    union regtype // PPU register file
-//
-//    {
-//        u32 value;
-//        // Reg0 (write)             // Reg1 (write)             // Reg2 (read)
-//        RegBit< 0, 8, u32 > sysctrl;
-//        RegBit< 8, 8, u32 > dispctrl;
-//        RegBit< 16, 8, u32 > status;
-//        RegBit< 0, 2, u32 > BaseNTA;
-//        RegBit< 8, 1, u32 > Grayscale;
-//        RegBit< 21, 1, u32 > SPoverflow;
-//        RegBit< 2, 1, u32 > Inc;
-//        RegBit< 9, 1, u32 > ShowBG8;
-//        RegBit< 22, 1, u32 > SP0hit;
-//        RegBit< 3, 1, u32 > SPaddr;
-//        RegBit< 10, 1, u32 > ShowSP8;
-//        RegBit< 23, 1, u32 > InVBlank;
-//        RegBit< 4, 1, u32 > BGaddr;
-//        RegBit< 11, 1, u32 > ShowBG;    // Reg3 (write)
-//        RegBit< 5, 1, u32 > SPsize;
-//        RegBit< 12, 1, u32 > ShowSP;
-//        RegBit< 24, 8, u32 > OAMaddr;
-//        RegBit< 6, 1, u32 > SlaveFlag;
-//        RegBit< 11, 2, u32 > ShowBGSP;
-//        RegBit< 24, 2, u32 > OAMdata;
-//        RegBit< 7, 1, u32 > NMIenabled;
-//        RegBit< 13, 3, u32 > EmpRGB;
-//        RegBit< 26, 6, u32 > OAMindex;
-//    }
-//
-//    reg;
+    public static class StatusFlag extends RegBitG<Byte>{
+        StatusFlag() {
+            init(0,8);
+        }
+        RegBitG<Byte> C = RegBitG.of(0),
+                Z = RegBitG.of(1),
+                I = RegBitG.of(2),
+                D = RegBitG.of(3);
 
-    public static class StatusFlag {
-        BitSet raw = new BitSet(8);
-        //            u8 raw;
-        RegBit C = new RegBit(0),
-                Z = new RegBit(1),
-                I = new RegBit(2),
-                D = new RegBit(3),
-                V = new RegBit(6),
-                N = new RegBit(7);
     }
 
     @Test
-    void printFieldsTest() {
-        var P = new StatusFlag();
-        Arrays.stream(StatusFlag.class.getDeclaredFields()).forEach(field -> System.out.println(field.getName() + ": " + field.getType().getName()));
+    void regBitCanStoreValue_Test() {
+        StatusFlag P = new StatusFlag();
+        P.set((byte) 25);
+        System.out.println("Read as String = " + P );
+
+        assertEquals(25, P.get().intValue());
+        assertEquals(0, P.Z.value );
     }
+
 }

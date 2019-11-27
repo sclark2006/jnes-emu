@@ -34,6 +34,14 @@ public class UnsignedByteTest {
     }
 
     @Test
+    public void unsignedByteSetValue() {
+        var uByte = UnsignedByte.valueOf(3);
+        assertEquals(3, uByte.byteValue());
+        uByte.setValue(5);
+        assertEquals(5, uByte.byteValue());
+    }
+
+    @Test
     public void unsignedByteToLong() {
         var uByte = UnsignedByte.valueOf(255);
         assertEquals(255L, uByte.longValue());

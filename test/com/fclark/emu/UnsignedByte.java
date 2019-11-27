@@ -7,6 +7,11 @@ public class UnsignedByte extends Number {
         this.value = (byte) value;
     }
 
+    public void setValue(int value) {
+        if(value > 255 || value < 0) throw new IllegalArgumentException("The value should be between 0 and 255");
+        this.value = (byte)value;
+    }
+
     @Override
     public int intValue() {
         return value & 0xFF;
