@@ -33,4 +33,22 @@ public class AnyTest {
         System.out.println(Integer.bitCount(20));
 
     }
+
+    @Test
+    void addressCompositionTest() {
+        short address = (short) 0b1111111101010101;
+        assertEquals(0b1111111101010101, address & 0xFFFF);
+
+        byte value;
+
+        value = (byte) 0b11110000;
+        address = (short) ((address & 0xFF) | value<<8); //change hi byte
+        assertEquals(0b1111000001010101,address & 0xFFFF);
+
+        value = 0b00001111;
+        address = (short) ((address & 0xFF00) | value); //change lo byte
+        assertEquals(0b1111000000001111,address & 0xFFFF);
+
+
+    }
 }

@@ -11,7 +11,7 @@ public class CPU implements ProcessingUnit {
 	private static final int FREQUENCY_DIVIDER = 12;
 	private static Map<Integer, Consumer<CPU>> INSTRUCTIONS_MAP;
 	private final AddressDecoder addressDecoder;
-
+	Instruction currentInstruction;
 	Register A /*Accumulator*/ = new Register(8), X = new Register(8), Y = new Register(8),
 			PC /*Program Counter*/= new Register(16), S /* Stack Pointer*/ = new Register(8) ;
 
@@ -29,9 +29,16 @@ public class CPU implements ProcessingUnit {
 		AddressingMode(int bytes) { this.bytes = (byte)bytes; }
 	}
 
+	class Instruction {
+		int currentStep = 0; Consumer<CPU>[] steps;
+		Instruction(Consumer<CPU>[] steps) { this.steps = steps; }
+		void step(CPU cpu) {
+			steps[currentStep].accept(cpu); currentStep++;
+			if(currentStep == steps.length) cpu.currentInstruction = null;
+		}
+	}
+
 	int cycleCounter = 0;
-
-
 
 	public CPU(AddressDecoder addressMapper) {
 		this.addressDecoder = addressMapper;
@@ -40,6 +47,7 @@ public class CPU implements ProcessingUnit {
 	@Override
 	public void onPowerUp() {
 		System.out.println("Init the CPU");
+		this.currentInstruction = null;
 		P.write(0x34);
 		A.write(0x0);
 		X.write(0x0);
@@ -77,8 +85,8 @@ public class CPU implements ProcessingUnit {
 		System.out.print("\n ->cpu cycle\n");
 		//TODO: check interrupt
 		//TODO: Detect addressing mode
-		int instruction = this.addressDecoder.readAt(PC.read());
-		INSTRUCTIONS_MAP.get(instruction).accept(this);
+		byte opCode = (byte) this.addressDecoder.readAt(PC.read());
+		INSTRUCTIONS_MAP.get(opCode).accept(this);
 		//PC.incrementBefore();
 	}
 	

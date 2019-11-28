@@ -9,7 +9,8 @@ import java.util.Set;
 
 public class AddressDecoder {
 	private Set<AddressRange<?>> addressSet;
-	
+	private short nextWriteReadAddress;
+
 	public AddressDecoder() {
 		addressSet = new HashSet<>();
 	}
@@ -76,6 +77,23 @@ public class AddressDecoder {
 		for(int index = startAddress; index <= endAddress; index++) {
 			 writeAt(index, value);
 		}		
+	}
+
+	public void setAddress16(short address) {
+		this.nextWriteReadAddress = (short) (address & 0xFFFF);
+	}
+	public void setAddress8Lo(byte loByteAddress) {
+		this.nextWriteReadAddress = (short) ((nextWriteReadAddress & 0xFF00) | loByteAddress); //change lo byte
+	}
+	public void setAddress8Hi(byte hiByteAddress) {
+		this.nextWriteReadAddress = (short) ((nextWriteReadAddress & 0xFF) | hiByteAddress << 8); //change hi byte
+	}
+	public void write(byte value) {
+		this.writeAt(this.nextWriteReadAddress & 0xFFFF, value & 0xFF);
+	}
+
+	public byte read() {
+		return (byte) this.readAt(this.nextWriteReadAddress & 0xFFFF);
 	}
 	
 	public static class AddressRange<T> {
