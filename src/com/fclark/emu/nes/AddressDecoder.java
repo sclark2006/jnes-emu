@@ -1,5 +1,7 @@
 package com.fclark.emu.nes;
 
+import com.fclark.emu.MemoryNotMappedException;
+
 import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.Optional;

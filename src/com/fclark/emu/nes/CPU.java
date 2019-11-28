@@ -12,18 +12,27 @@ public class CPU implements ProcessingUnit {
 	private static Map<Integer, Consumer<CPU>> INSTRUCTIONS_MAP;
 	private final AddressDecoder addressDecoder;
 
-	Register A = new Register(8), X = new Register(8), Y = new Register(8),
-			PC = new Register(16), S = new Register(8);
+	Register A /*Accumulator*/ = new Register(8), X = new Register(8), Y = new Register(8),
+			PC /*Program Counter*/= new Register(16), S /* Stack Pointer*/ = new Register(8) ;
 
 	class StatusFlagsRegister extends Register {
 		StatusFlagsRegister() {super(8);}
-		@AllBits public byte C, Z, I, D, UNUSED4,UNUSED5, V, N;
+		@AllBits public byte C, Z, I, D, B,U, V, N;
 	}
 	StatusFlagsRegister P = new StatusFlagsRegister();
 
+	enum AddressingMode {
+		ABSOLUTE(3), ABSOLUTE_X(3), ABSOLUTE_Y(3), ACCUMULATOR(1), IMMEDIATE(2), IMPLIED(1),
+		INDEXED_INDIRECT(2), INDIRECT(3), INDIRECT_INDEXED(2), RELATIVE(1),ZERO_PAGE(2),
+		ZERO_PAGE_X(2), ZERO_PAGE_Y(2);
+		byte bytes;
+		AddressingMode(int bytes) { this.bytes = (byte)bytes; }
+	}
 
-	int cycleCounter = 0;	
-	
+	int cycleCounter = 0;
+
+
+
 	public CPU(AddressDecoder addressMapper) {
 		this.addressDecoder = addressMapper;
 	}
@@ -58,6 +67,10 @@ public class CPU implements ProcessingUnit {
 			process();
 		}
 	}
+
+	public void NMI(){}
+
+	public void IRQ() {}
 	
 	@Override
 	public void process() {
@@ -65,14 +78,12 @@ public class CPU implements ProcessingUnit {
 		//TODO: check interrupt
 		//TODO: Detect addressing mode
 		int instruction = this.addressDecoder.readAt(PC.read());
-		PC.inc(1);
 		INSTRUCTIONS_MAP.get(instruction).accept(this);
-		
 		//PC.incrementBefore();
 	}
 	
 	static {
 		INSTRUCTIONS_MAP = new Hashtable<>();
-		INSTRUCTIONS_MAP.put(0x0,(cpu) -> {});
+		INSTRUCTIONS_MAP.put(0X69,(cpu) -> { });
 	}
 }
